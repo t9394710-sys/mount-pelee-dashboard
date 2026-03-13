@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mount Pelée Alert Dashboard</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+#map { height: 50vh; }
+.alertFlash { animation: flash 1s infinite; }
+@keyframes flash { 0%,100%{background:#7f1d1d}50%{background:#dc2626} }
+
+/* Flying objects */
+.flying { position: absolute; width: 30px; height: 30px; background: yellow; border-radius: 50%; animation: fly linear infinite; }
+@keyframes fly { 0% { transform: translateX(0) translateY(0) rotate(0deg); } 100% { transform: translateX(100vw) translateY(50vh) rotate(360deg); } }
+</style>
+</head>
+<body class="bg-slate-900 text-white overflow-hidden">
+
+<header class="p-4 bg-red-700 text-center">
+<h1 class="text-2xl font-bold">🌋 Mount Pelée Alert Dashboard</h1>
+<p class="text-sm">Real-time volcano monitoring and alerts</p>
+</header>
+
+<div id="alertPopup" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 p-4 rounded-xl shadow-xl z-50">
+🚨 EMERGENCY: Volcanic Activity Detected!
+</div>
+
+<main class="p-4 space-y-4">
+<div class="grid md:grid-cols-3 gap-4">
+<div class="bg-slate-800 p-4 rounded-xl">
+<h2 class="text-lg">Alert Level</h2>
+<div id="alertLevel" class="text-3xl font-bold text-green-400">Normal</div>
+</div>
+<div class="bg-slate-800 p-4 rounded-xl">
+<h2 class="text-lg">Seismic Activity</h2>
+<div id="seismic" class="text-3xl">0 tremors/hr</div>
+</div>
+<div class="bg-slate-800 p-4 rounded-xl">
+<h2 class="text-lg">Evacuation Status</h2>
+<div id="evac" class="text-xl">No action needed</div>
+</div>
+</div>
+
+<div id="map" class="rounded-xl mt-4"></div>
+
+<div class="bg-slate-800 p-4 rounded-xl mt-4">
+<h2 class="text-lg mb-2">Activity Log</h2>
+<ul id="log" class="text-sm space-y-1"></ul>
+</div>
+</main>
+
+<footer class="text-center text-xs text-gray-400 p-2">
+Mount Pelée monitoring demo
+</footer>
+
+<audio id="siren" src="https://actions.google.com/sounds/v1/alarms/alarm_siren.ogg"></audio>
+
+<script>
+// Initialize map
+const map = L.map('map').setView([14.809, -61.165], 8);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+const volcanoMarker = L.marker([14.809, -61.165]).addTo(map).bindPopup('🌋 Mount Pelée');
+
+// Alert system
+function triggerAlert(msg){
+ const siren = document.getElementById('siren');
+ siren.play();
+ const popup = document.getElementById('alertPopup');
+ popup.classList.remove('hidden');
+ const alertDiv = document.getElementById('alertLevel');
+ alertDiv.textContent = 'WARNING';
+ alertDiv.className = 'text-3xl font-bold text-red-500';
+ const evac = document.getElementById('evac');
+ evac.textContent = 'Evacuate if nearby';
+ log(msg);
+}
+
+function log(msg){
+ const list = document.getElementById('log');
+ const item = document.createElement('li');
+ item.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
+ list.prepend(item);
+ if(list.children.length>12){ list.removeChild(list.lastChild); }
+}
+
+// Simulate seismic activity
+function randomUpdate(){
+ const quakes = Math.floor(Math.random()*10);
+ document.getElementById('seismic').textContent = quakes + ' tremors/hr';
+ if(quakes>=7){ triggerAlert('High seismic activity detected near Mount Pelée'); }
+ else { document.getElementById('alertLevel').textContent='Normal'; document.getElementById('alertLevel').className='text-3xl font-bold text-green-400'; document.getElementById('evac').textContent='No action needed'; }
+ log(quakes+' tremors detected');
+}
+
+randomUpdate();
+setInterval(randomUpdate,5000);
+
+// Create flying objects
+function createFlyingObjects(count){
+ for(let i=0;i<count;i++){
+   const obj=document.createElement('div');
+   obj.className='flying';
+   obj.style.top=Math.random()*window.innerHeight+'px';
+   obj.style.left='-'+Math.random()*100+'px';
+   obj.style.animationDuration=(5+Math.random()*10)+'s';
+   document.body.appendChild(obj);
+ }
+}
+
+createFlyingObjects(10);
+</script>
+
+</body>
+</html>
