@@ -3,140 +3,240 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mount Pelée Alert Dashboard</title>
+<title>Mount Pelée Volcano Science Fair Dashboard</title>
+
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@3.3.2/dist/tailwind.min.css">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-#map { height: 50vh; }
-.alertFlash { animation: flash 1s infinite; }
-@keyframes flash { 0%,100%{background:#7f1d1d}50%{background:#dc2626} }
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
 
-/* Flying objects */
-.flying { position: absolute; width: 30px; height: 30px; background: yellow; border-radius: 50%; animation: fly linear infinite; }
-@keyframes fly { 0% { transform: translateX(0) translateY(0) rotate(0deg); } 100% { transform: translateX(100vw) translateY(50vh) rotate(360deg); } }
-</style>
 <style>
+body{
+font-family:Inter, sans-serif;
+background: radial-gradient(circle at top, #1a1a2e, #0f0f1a 60%, #000);
+color:white;
+overflow-x:hidden;
+}
+
+h1,h2,h3{
+font-family:Orbitron, sans-serif;
+}
+
+#map{height:420px;border-radius:16px}
+
+.card{
+background:rgba(255,255,255,0.05);
+backdrop-filter:blur(6px);
+padding:18px;
+border-radius:16px;
+box-shadow:0 0 25px rgba(0,0,0,0.6);
+}
+
 /* Lava particles */
-.lava { position:absolute; width:8px; height:8px; background:orange; border-radius:50%; pointer-events:none; animation:lavaRise linear forwards; }
-@keyframes lavaRise {
-0% { transform: translateY(0) scale(1); opacity:1; background:orange; }
-50% { background:orangered; }
-100% { transform: translateY(-120px) scale(0.5); opacity:0; background:red; }
+.lava{
+position:absolute;
+width:8px;
+height:8px;
+background:orange;
+border-radius:50%;
+animation:lavaRise linear forwards;
+pointer-events:none;
+}
+
+@keyframes lavaRise{
+0%{transform:translateY(0) scale(1);opacity:1;background:orange}
+50%{background:orangered}
+100%{transform:translateY(-140px) scale(0.4);opacity:0;background:red}
+}
+
+/* floating ash */
+.ash{
+position:absolute;
+width:6px;
+height:6px;
+background:rgba(255,255,255,0.4);
+border-radius:50%;
+animation:ashFloat linear infinite;
+}
+
+@keyframes ashFloat{
+0%{transform:translateY(0) translateX(0)}
+100%{transform:translateY(-120vh) translateX(40vw)}
+}
+
+.section-title{
+font-size:1.6rem;
+margin-bottom:10px;
+color:#ffcc66
 }
 </style>
 </head>
-<body class="bg-slate-900 text-white overflow-hidden">
 
-<header class="p-4 bg-red-700 text-center">
-<h1 class="text-2xl font-bold">🌋 Mount Pelée Alert Dashboard</h1>
-<p class="text-sm">Real-time volcano monitoring and alerts</p>
+<body>
+
+<header class="text-center py-6">
+<h1 class="text-4xl font-bold">🌋 Mount Pelée Volcano Monitoring Center</h1>
+<p class="text-gray-300">Science Fair Volcano Safety & Monitoring Dashboard</p>
 </header>
 
-<div id="alertPopup" class="hidden fixed top-5 left-1/2 -translate-x-1/2 bg-red-600 p-4 rounded-xl shadow-xl z-50">
-🚨 EMERGENCY: Volcanic Activity Detected!
-</div>
+<main class="max-w-6xl mx-auto p-4 space-y-8">
 
-<main class="p-4 space-y-4">
-<div class="grid md:grid-cols-3 gap-4">
-<div class="bg-slate-800 p-4 rounded-xl">
-<h2 class="text-lg">Alert Level</h2>
+<section class="grid md:grid-cols-3 gap-4">
+<div class="card">
+<h2 class="section-title">Alert Level</h2>
 <div id="alertLevel" class="text-3xl font-bold text-green-400">Normal</div>
+<p class="text-sm text-gray-300">Current volcano activity level.</p>
 </div>
-<div class="bg-slate-800 p-4 rounded-xl">
-<h2 class="text-lg">Seismic Activity</h2>
+
+<div class="card">
+<h2 class="section-title">Seismic Activity</h2>
 <div id="seismic" class="text-3xl">0 tremors/hr</div>
+<p class="text-sm text-gray-300">Earthquakes detected near the volcano.</p>
 </div>
-<div class="bg-slate-800 p-4 rounded-xl">
-<h2 class="text-lg">Evacuation Status</h2>
+
+<div class="card">
+<h2 class="section-title">Evacuation Advice</h2>
 <div id="evac" class="text-xl">No action needed</div>
+<p class="text-sm text-gray-300">Safety recommendation.</p>
 </div>
+</section>
+
+<section class="card">
+<h2 class="section-title">🌍 Volcano Location Map</h2>
+<div id="map"></div>
+</section>
+
+<section class="grid md:grid-cols-2 gap-6">
+
+<div class="card">
+<h2 class="section-title">About Mount Pelée</h2>
+<p>
+Mount Pelée is an active volcano located on the island of Martinique in the Caribbean. 
+It is famous for its major eruption in 1902 which destroyed the city of Saint-Pierre.
+Scientists monitor Mount Pelée carefully because it can produce explosive eruptions,
+ash clouds, and pyroclastic flows.
+</p>
 </div>
 
-<div id="map" class="rounded-xl mt-4"></div>
+<div class="card">
+<h2 class="section-title">How Scientists Monitor Volcanoes</h2>
+<ul class="list-disc ml-6 space-y-2">
+<li>Seismometers detect earthquakes underground</li>
+<li>Gas sensors measure volcanic gases</li>
+<li>Satellites detect heat and ash clouds</li>
+<li>Ground deformation sensors detect swelling</li>
+</ul>
+</div>
 
-<div class="bg-slate-800 p-4 rounded-xl mt-4">
-<h2 class="text-lg mb-2">Activity Log</h2>
+</section>
+
+<section class="grid md:grid-cols-2 gap-6">
+
+<div class="card">
+<h2 class="section-title">Volcano Safety Kit</h2>
+<ul class="list-disc ml-6 space-y-2">
+<li>Clean drinking water</li>
+<li>Flashlight and batteries</li>
+<li>Dust masks to protect from ash</li>
+<li>Emergency food supplies</li>
+<li>First aid kit</li>
+<li>Battery powered radio</li>
+</ul>
+</div>
+
+<div class="card">
+<h2 class="section-title">Important Safety Tips</h2>
+<ul class="list-disc ml-6 space-y-2">
+<li>Follow evacuation instructions from authorities</li>
+<li>Stay indoors during ashfall</li>
+<li>Protect eyes and lungs from ash</li>
+<li>Avoid river valleys during eruptions</li>
+<li>Keep emergency supplies ready</li>
+</ul>
+</div>
+
+</section>
+
+<section class="card">
+<h2 class="section-title">Activity Log</h2>
 <ul id="log" class="text-sm space-y-1"></ul>
-</div>
+</section>
+
 </main>
 
-<footer class="text-center text-xs text-gray-400 p-2">
-Mount Pelée monitoring demo
+<footer class="text-center text-gray-400 py-6 text-sm">
+Science Fair Volcano Project – Mount Pelée Monitoring Dashboard
 </footer>
 
-<audio id="siren" src="https://actions.google.com/sounds/v1/alarms/alarm_siren.ogg"></audio>
-
 <script>
-// Initialize map
-const map = L.map('map').setView([14.809, -61.165], 8);
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
-const volcanoMarker = L.marker([14.809, -61.165]).addTo(map).bindPopup('🌋 Mount Pelée');
 
-// Alert system
-function triggerAlert(msg){
- const siren = document.getElementById('siren');
- siren.play();
- const popup = document.getElementById('alertPopup');
- popup.classList.remove('hidden');
- const alertDiv = document.getElementById('alertLevel');
- alertDiv.textContent = 'WARNING';
- alertDiv.className = 'text-3xl font-bold text-red-500';
- const evac = document.getElementById('evac');
- evac.textContent = 'Evacuate if nearby';
- log(msg);
-}
+const map=L.map('map').setView([14.809,-61.165],8)
+
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map)
+
+L.marker([14.809,-61.165]).addTo(map).bindPopup("🌋 Mount Pelée")
 
 function log(msg){
- const list = document.getElementById('log');
- const item = document.createElement('li');
- item.textContent = new Date().toLocaleTimeString() + ' - ' + msg;
- list.prepend(item);
- if(list.children.length>12){ list.removeChild(list.lastChild); }
+const list=document.getElementById('log')
+const item=document.createElement('li')
+item.textContent=new Date().toLocaleTimeString()+" - "+msg
+list.prepend(item)
+if(list.children.length>10)list.removeChild(list.lastChild)
 }
 
-// Simulate seismic activity
-function randomUpdate(){
- const quakes = Math.floor(Math.random()*10);
- document.getElementById('seismic').textContent = quakes + ' tremors/hr';
- if(quakes>=7){ triggerAlert('High seismic activity detected near Mount Pelée'); }
- else { document.getElementById('alertLevel').textContent='Normal'; document.getElementById('alertLevel').className='text-3xl font-bold text-green-400'; document.getElementById('evac').textContent='No action needed'; }
- log(quakes+' tremors detected');
+function update(){
+const quakes=Math.floor(Math.random()*10)
+
+document.getElementById('seismic').textContent=quakes+" tremors/hr"
+
+if(quakes>6){
+document.getElementById('alertLevel').textContent='WARNING'
+document.getElementById('alertLevel').className='text-3xl font-bold text-red-500'
+document.getElementById('evac').textContent='Evacuate if nearby'
+log('High seismic activity detected')
+spawnLava()
+}
+else{
+document.getElementById('alertLevel').textContent='Normal'
+document.getElementById('alertLevel').className='text-3xl font-bold text-green-400'
+document.getElementById('evac').textContent='No action needed'
+log(quakes+' tremors detected')
+}
 }
 
-randomUpdate();
-setInterval(randomUpdate,5000);
+setInterval(update,5000)
+update()
 
-// Create flying objects
-function createFlyingObjects(count){
- for(let i=0;i<count;i++){
-   const obj=document.createElement('div');
-   obj.className='flying';
-   obj.style.top=Math.random()*window.innerHeight+'px';
-   obj.style.left='-'+Math.random()*100+'px';
-   obj.style.animationDuration=(5+Math.random()*10)+'s';
-   document.body.appendChild(obj);
- }
-}
-
-createFlyingObjects(10);
-
-// Lava eruption animation near volcano
 function spawnLava(){
-  const mapEl=document.getElementById('map');
-  const rect=mapEl.getBoundingClientRect();
-  for(let i=0;i<6;i++){
-    const lava=document.createElement('div');
-    lava.className='lava';
-    lava.style.left=(rect.left+rect.width/2 + (Math.random()*40-20))+'px';
-    lava.style.top=(rect.top+rect.height/2 + (Math.random()*20-10))+'px';
-    lava.style.animationDuration=(1+Math.random()*1.5)+'s';
-    document.body.appendChild(lava);
-    setTimeout(()=>lava.remove(),2000);
-  }
+const rect=document.getElementById('map').getBoundingClientRect()
+
+for(let i=0;i<8;i++){
+const lava=document.createElement('div')
+lava.className='lava'
+
+lava.style.left=(rect.left+rect.width/2+(Math.random()*40-20))+'px'
+lava.style.top=(rect.top+rect.height/2)+'px'
+lava.style.animationDuration=(1+Math.random()*1.5)+'s'
+
+document.body.appendChild(lava)
+
+setTimeout(()=>lava.remove(),2000)
+}
 }
 
-setInterval(spawnLava,800);
+function spawnAsh(){
+const ash=document.createElement('div')
+ash.className='ash'
+ash.style.left=Math.random()*window.innerWidth+'px'
+ash.style.bottom='-10px'
+ash.style.animationDuration=(8+Math.random()*8)+'s'
+document.body.appendChild(ash)
+
+setTimeout(()=>ash.remove(),16000)
+}
+
+setInterval(spawnAsh,800)
+
 </script>
 
 </body>
